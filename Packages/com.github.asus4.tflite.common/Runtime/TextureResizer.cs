@@ -19,6 +19,7 @@ namespace TensorFlowLite
 
         RenderTexture resizeTexture;
         Material _blitMaterial;
+        RenderTextureReadWrite _colorConversionMode;
 
         static readonly int _VertTransform = Shader.PropertyToID("_VertTransform");
         static readonly int _UVRect = Shader.PropertyToID("_UVRect");
@@ -49,9 +50,9 @@ namespace TensorFlowLite
             set => material.SetMatrix(_VertTransform, value);
         }
 
-        public TextureResizer()
+        public TextureResizer(RenderTextureReadWrite colorConversionMode = RenderTextureReadWrite.Default)
         {
-
+            _colorConversionMode = colorConversionMode;
         }
 
         public void Dispose()
@@ -85,7 +86,7 @@ namespace TensorFlowLite
                 || resizeTexture.height != height)
             {
                 DisposeUtil.TryDispose(resizeTexture);
-                resizeTexture = new RenderTexture(width, height, 0, RenderTextureFormat.ARGB32);
+                resizeTexture = new RenderTexture(width, height, 0, RenderTextureFormat.ARGB32, _colorConversionMode);
             }
 
             if (fillBackground)

@@ -33,7 +33,7 @@ namespace TensorFlowLite
             set => resizeOptions = value;
         }
 
-        public BaseImagePredictor(string modelPath, bool useGPU = true)
+        public BaseImagePredictor(string modelPath, bool useGPU = true, RenderTextureReadWrite renderTextureReadWrite = RenderTextureReadWrite.Default)
         {
             var options = new InterpreterOptions();
             if (useGPU)
@@ -59,7 +59,45 @@ namespace TensorFlowLite
             InitInputs();
 
             tex2tensor = new TextureToTensor();
-            resizer = new TextureResizer();
+            resizer = new TextureResizer(renderTextureReadWrite);
+            resizeOptions = new TextureResizer.ResizeOptions()
+            {
+                aspectMode = AspectMode.Fill,
+                rotationDegree = 0,
+                mirrorHorizontal = false,
+                mirrorVertical = false,
+                width = width,
+                height = height,
+            };
+        }
+
+        public BaseImagePredictor(byte[] modelData, bool useGPU = true, RenderTextureReadWrite renderTextureReadWrite = RenderTextureReadWrite.Default)
+        {
+            var options = new InterpreterOptions();
+            if (useGPU)
+            {
+                options.AddGpuDelegate();
+            }
+            else
+            {
+                options.threads = SystemInfo.processorCount;
+            }
+
+            try
+            {
+                interpreter = new Interpreter(modelData, options);
+            }
+            catch (System.Exception e)
+            {
+                interpreter?.Dispose();
+                throw e;
+            }
+
+            interpreter.LogIOInfo();
+            InitInputs();
+
+            tex2tensor = new TextureToTensor();
+            resizer = new TextureResizer(renderTextureReadWrite);
             resizeOptions = new TextureResizer.ResizeOptions()
             {
                 aspectMode = AspectMode.Fill,
